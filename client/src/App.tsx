@@ -10,6 +10,9 @@ import { AppSidebar } from "@/components/app-sidebar";
 import LoginPage from "@/pages/login";
 import HomePage from "@/pages/home";
 import NotFound from "@/pages/not-found";
+import AttendantsPage from "@/pages/attendants";
+import ClientsPage from "@/pages/clients";
+import ConversationsPage from "@/pages/conversations";
 import type { User } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 
@@ -33,24 +36,24 @@ function AuthenticatedLayout({ user }: { user: User }) {
   } as React.CSSProperties;
 
   return (
-    <SidebarProvider style={style}>
-      <div className="flex h-screen w-full">
-        <AppSidebar />
-        <div className="flex flex-col flex-1 overflow-hidden">
-          <AppHeader user={user} onLogout={handleLogout} />
+    <div className="flex flex-col h-screen w-full">
+      <AppHeader user={user} onLogout={handleLogout} />
+      <SidebarProvider style={style}>
+        <div className="flex flex-1 w-full overflow-hidden">
+          <AppSidebar user={user} />
           <main className="flex-1 overflow-auto">
             <Switch>
               <Route path="/" component={HomePage} />
-              <Route path="/messages" component={() => <div className="p-8">Mensagens em breve...</div>} />
-              <Route path="/channels" component={() => <div className="p-8">Canais em breve...</div>} />
-              <Route path="/friends" component={() => <div className="p-8">Amigos em breve...</div>} />
+              <Route path="/attendants" component={AttendantsPage} />
+              <Route path="/clients" component={ClientsPage} />
+              <Route path="/conversations" component={ConversationsPage} />
               <Route path="/settings" component={() => <div className="p-8">Configurações em breve...</div>} />
               <Route component={NotFound} />
             </Switch>
           </main>
         </div>
-      </div>
-    </SidebarProvider>
+      </SidebarProvider>
+    </div>
   );
 }
 

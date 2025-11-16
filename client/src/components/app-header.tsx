@@ -1,4 +1,4 @@
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -58,6 +58,7 @@ export function AppHeader({ user, onLogout }: AppHeaderProps) {
                   data-testid="button-user-menu"
                 >
                   <Avatar className="h-8 w-8">
+                    <AvatarImage src={user.avatarUrl || undefined} alt={user.name} />
                     <AvatarFallback className="bg-white/20 text-white text-sm font-semibold">
                       {userInitials}
                     </AvatarFallback>
@@ -67,6 +68,7 @@ export function AppHeader({ user, onLogout }: AppHeaderProps) {
               <DropdownMenuContent className="w-56" align="end" data-testid="menu-user-dropdown">
                 <div className="flex items-center gap-2 p-2">
                   <Avatar className="h-8 w-8">
+                    <AvatarImage src={user.avatarUrl || undefined} alt={user.name} />
                     <AvatarFallback className="bg-primary/10 text-primary text-sm font-semibold">
                       {userInitials}
                     </AvatarFallback>

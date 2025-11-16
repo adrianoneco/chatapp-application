@@ -3,33 +3,45 @@ import {
   SidebarContent,
   SidebarGroup,
   SidebarGroupContent,
+  SidebarGroupLabel,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarTrigger,
 } from "@/components/ui/sidebar";
-import { Home, MessageSquare, Users, Settings, Hash } from "lucide-react";
+import { Home, MessageSquare, Users, Settings, UserCog } from "lucide-react";
 import { Link, useLocation } from "wouter";
+import type { User } from "@shared/schema";
 
-const menuItems = [
+interface MenuItem {
+  title: string;
+  url: string;
+  icon: typeof Home;
+  roles?: ("attendant" | "client")[];
+}
+
+const menuItems: MenuItem[] = [
   {
     title: "Início",
     url: "/",
     icon: Home,
   },
   {
-    title: "Mensagens",
-    url: "/messages",
+    title: "Conversas",
+    url: "/conversations",
     icon: MessageSquare,
   },
   {
-    title: "Canais",
-    url: "/channels",
-    icon: Hash,
+    title: "Atendentes",
+    url: "/attendants",
+    icon: UserCog,
+    roles: ["attendant"],
   },
   {
-    title: "Amigos",
-    url: "/friends",
+    title: "Contatos",
+    url: "/clients",
     icon: Users,
+    roles: ["attendant"],
   },
   {
     title: "Configurações",
@@ -38,16 +50,29 @@ const menuItems = [
   },
 ];
 
-export function AppSidebar() {
+interface AppSidebarProps {
+  user: User;
+}
+
+export function AppSidebar({ user }: AppSidebarProps) {
   const [location] = useLocation();
 
+  const filteredMenuItems = menuItems.filter((item) => {
+    if (!item.roles) return true;
+    return item.roles.includes(user.role);
+  });
+
   return (
-    <Sidebar>
+    <Sidebar className="border-r border-border/40 bg-sidebar">
+      <div className="flex items-center justify-between h-12 px-4 border-b border-border/40">
+        <span className="text-sm font-semibold text-sidebar-foreground">Menu</span>
+        <SidebarTrigger data-testid="button-sidebar-toggle" className="h-7 w-7" />
+      </div>
       <SidebarContent className="pt-4">
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
-              {menuItems.map((item) => {
+              {filteredMenuItems.map((item) => {
                 const isActive = location === item.url;
                 return (
                   <SidebarMenuItem key={item.title}>
