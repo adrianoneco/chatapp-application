@@ -22,7 +22,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Plus, Send, MessageSquare, User as UserIcon, Clock } from "lucide-react";
+import { Plus, Send, MessageSquare, User as UserIcon, Clock, Search, Mic, Video, Camera, Paperclip, Sparkles, Reply, Forward, Trash2 } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -48,7 +49,10 @@ export default function ConversationsPage() {
   const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
   const [isNewConversationOpen, setIsNewConversationOpen] = useState(false);
   const [messageContent, setMessageContent] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [activeTab, setActiveTab] = useState("open");
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { data: currentUser } = useQuery<User>({
     queryKey: ["/api/auth/me"],
@@ -192,33 +196,66 @@ export default function ConversationsPage() {
       }
     : null;
 
+  const filteredConversations = conversations.filter(conv => {
+    const matchesSearch = !searchQuery || 
+      conv.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      conv.protocol.toLowerCase().includes(searchQuery.toLowerCase());
+    
+    const matchesTab = 
+      (activeTab === "open" && conv.status === "open") ||
+      (activeTab === "waiting" && conv.status === "waiting") ||
+      (activeTab === "closed" && conv.status === "closed");
+    
+    return matchesSearch && matchesTab;
+  });
+
   return (
     <div className="flex h-full">
-      <div className="w-80 border-r border-border flex flex-col">
-        <div className="p-4 border-b border-border">
-          <div className="flex justify-between items-center mb-4">
+      <div className="w-96 border-r border-border flex flex-col">
+        <div className="p-4 border-b border-border space-y-3">
+          <div className="flex justify-between items-center">
             <h2 className="text-lg font-semibold">Conversas</h2>
             {currentUser?.role === "attendant" && (
               <Button 
-                size="sm" 
+                size="icon"
+                variant="ghost"
                 onClick={() => setIsNewConversationOpen(true)}
                 data-testid="button-new-conversation"
               >
-                <Plus className="h-4 w-4" />
+                <Plus className="h-5 w-5" />
               </Button>
             )}
           </div>
+          
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Buscar conversas..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-9"
+              data-testid="input-search-conversations"
+            />
+          </div>
+
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="open">Pendente</TabsTrigger>
+              <TabsTrigger value="waiting">Atendendo</TabsTrigger>
+              <TabsTrigger value="closed">Fechadas</TabsTrigger>
+            </TabsList>
+          </Tabs>
         </div>
 
         <ScrollArea className="flex-1">
-          {conversations.length === 0 ? (
+          {filteredConversations.length === 0 ? (
             <div className="p-4 text-center text-muted-foreground">
               <MessageSquare className="h-12 w-12 mx-auto mb-2 opacity-20" />
               <p className="text-sm">Nenhuma conversa</p>
             </div>
           ) : (
             <div className="p-2">
-              {conversations.map((conversation) => {
+              {filteredConversations.map((conversation) => {
                 const isActive = selectedConversation?.id === conversation.id;
                 const otherUser = conversation.clientId === currentUser?.id
                   ? getUserById(conversation.attendantId)
@@ -335,22 +372,91 @@ export default function ConversationsPage() {
               </div>
             </ScrollArea>
 
-            <div className="p-4 border-t border-border">
-              <form onSubmit={handleSendMessage} className="flex gap-2">
-                <Input
-                  value={messageContent}
-                  onChange={(e) => setMessageContent(e.target.value)}
-                  placeholder="Digite sua mensagem..."
-                  disabled={sendMessageMutation.isPending}
-                  data-testid="input-message"
-                />
-                <Button
-                  type="submit"
-                  disabled={!messageContent.trim() || sendMessageMutation.isPending}
-                  data-testid="button-send-message"
-                >
-                  <Send className="h-4 w-4" />
-                </Button>
+            <div className="p-4 border-t border-border bg-background">
+              <form onSubmit={handleSendMessage} className="space-y-2">
+                <div className="flex items-end gap-2">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="flex-shrink-0"
+                    title="Corrigir texto com IA"
+                    data-testid="button-ai-correction"
+                  >
+                    <Sparkles className="h-5 w-5" />
+                  </Button>
+
+                  <div className="flex-1 relative flex items-end gap-2 rounded-lg border border-input bg-background px-3 py-2">
+                    <Input
+                      value={messageContent}
+                      onChange={(e) => setMessageContent(e.target.value)}
+                      placeholder="Digite sua mensagem..."
+                      disabled={sendMessageMutation.isPending}
+                      className="border-0 shadow-none focus-visible:ring-0 px-0"
+                      data-testid="input-message"
+                    />
+                    
+                    <div className="flex items-center gap-1 flex-shrink-0">
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8"
+                        title="Gravar áudio"
+                        data-testid="button-record-audio"
+                      >
+                        <Mic className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8"
+                        title="Gravar vídeo"
+                        data-testid="button-record-video"
+                      >
+                        <Video className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8"
+                        title="Tirar foto"
+                        data-testid="button-take-photo"
+                      >
+                        <Camera className="h-4 w-4" />
+                      </Button>
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        className="hidden"
+                        accept="image/*,video/*,audio/*,application/pdf"
+                      />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8"
+                        onClick={() => fileInputRef.current?.click()}
+                        title="Anexar arquivo"
+                        data-testid="button-attach-file"
+                      >
+                        <Paperclip className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+
+                  <Button
+                    type="submit"
+                    size="icon"
+                    disabled={!messageContent.trim() || sendMessageMutation.isPending}
+                    className="flex-shrink-0"
+                    data-testid="button-send-message"
+                  >
+                    <Send className="h-4 w-4" />
+                  </Button>
+                </div>
               </form>
             </div>
           </>
