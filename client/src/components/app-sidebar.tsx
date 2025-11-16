@@ -9,7 +9,7 @@ import {
   SidebarMenuItem,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
-import { Home, MessageSquare, Users, Settings, UserCog } from "lucide-react";
+import { Home, MessageSquare, Users, Settings, UserCog, Hash } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import type { User } from "@shared/schema";
 
@@ -42,6 +42,11 @@ const menuItems: MenuItem[] = [
     url: "/clients",
     icon: Users,
     roles: ["attendant"],
+  },
+  {
+    title: "Canais",
+    url: "/channels",
+    icon: Hash,
   },
   {
     title: "Configurações",

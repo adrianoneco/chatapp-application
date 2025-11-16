@@ -32,7 +32,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { AvatarUpload } from "@/components/avatar-upload";
-import { Plus, Pencil, Trash2 } from "lucide-react";
+import { Plus, Pencil, Trash2, MessageSquare } from "lucide-react";
+import { useLocation } from "wouter";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -50,6 +51,7 @@ type ClientForm = z.infer<typeof clientSchema>;
 
 export default function ClientsPage() {
   const { toast } = useToast();
+  const [, setLocation] = useLocation();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingClient, setEditingClient] = useState<User | null>(null);
   const [deleteClient, setDeleteClient] = useState<User | null>(null);
@@ -57,6 +59,10 @@ export default function ClientsPage() {
 
   const { data: clients = [], isLoading } = useQuery<User[]>({
     queryKey: ["/api/users/clients"],
+  });
+
+  const { data: channels = [] } = useQuery<any[]>({
+    queryKey: ["/api/channels"],
   });
 
   const form = useForm<ClientForm>({
@@ -189,6 +195,19 @@ export default function ClientsPage() {
       .slice(0, 2);
   };
 
+  const handleStartConversation = (clientId: string) => {
+    const webChannel = channels.find(c => c.type === "web");
+    if (!webChannel) {
+      toast({
+        title: "Erro",
+        description: "Canal web não encontrado",
+        variant: "destructive",
+      });
+      return;
+    }
+    setLocation(`/conversations/${webChannel.id}?clientId=${clientId}`);
+  };
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-full">
@@ -219,13 +238,14 @@ export default function ClientsPage() {
               <TableHead className="w-16">Avatar</TableHead>
               <TableHead>Nome</TableHead>
               <TableHead>Usuário</TableHead>
+              <TableHead className="w-32"></TableHead>
               <TableHead className="text-right">Ações</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {clients.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={4} className="text-center text-muted-foreground py-8">
+                <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
                   Nenhum contato cadastrado
                 </TableCell>
               </TableRow>
@@ -242,6 +262,17 @@ export default function ClientsPage() {
                   </TableCell>
                   <TableCell className="font-medium">{client.name}</TableCell>
                   <TableCell className="text-muted-foreground">@{client.username}</TableCell>
+                  <TableCell>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleStartConversation(client.id)}
+                      data-testid={`button-start-conversation-${client.id}`}
+                    >
+                      <MessageSquare className="h-4 w-4 mr-2" />
+                      Iniciar Conversa
+                    </Button>
+                  </TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-2">
                       <Button

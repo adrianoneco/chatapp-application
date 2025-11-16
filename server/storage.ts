@@ -1,10 +1,13 @@
 import { 
   users, 
+  channels,
   conversations,
   messages,
   type User, 
   type InsertUser,
   type UpdateUser,
+  type Channel,
+  type InsertChannel,
   type Conversation,
   type InsertConversation,
   type Message,
@@ -12,15 +15,7 @@ import {
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, or, desc } from "drizzle-orm";
-
-function generateProtocol(): string {
-  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-  let protocol = '';
-  for (let i = 0; i < 10; i++) {
-    protocol += chars.charAt(Math.floor(Math.random() * chars.length));
-  }
-  return protocol;
-}
+import { generateProtocol } from "./utils/protocol";
 
 export interface IStorage {
   // Users
@@ -30,6 +25,14 @@ export interface IStorage {
   createUser(user: InsertUser): Promise<User>;
   updateUser(id: string, data: UpdateUser): Promise<User | undefined>;
   deleteUser(id: string): Promise<boolean>;
+  
+  // Channels
+  getChannel(id: string): Promise<Channel | undefined>;
+  getChannelByName(name: string): Promise<Channel | undefined>;
+  getAllChannels(): Promise<Channel[]>;
+  createChannel(channel: InsertChannel): Promise<Channel>;
+  updateChannel(id: string, data: Partial<InsertChannel>): Promise<Channel | undefined>;
+  deleteChannel(id: string): Promise<boolean>;
   
   // Conversations
   getConversation(id: string): Promise<Conversation | undefined>;
@@ -79,6 +82,43 @@ export class DatabaseStorage implements IStorage {
 
   async deleteUser(id: string): Promise<boolean> {
     const result = await db.delete(users).where(eq(users.id, id));
+    return result.rowCount ? result.rowCount > 0 : false;
+  }
+
+  // Channels
+  async getChannel(id: string): Promise<Channel | undefined> {
+    const [channel] = await db.select().from(channels).where(eq(channels.id, id));
+    return channel || undefined;
+  }
+
+  async getChannelByName(name: string): Promise<Channel | undefined> {
+    const [channel] = await db.select().from(channels).where(eq(channels.name, name));
+    return channel || undefined;
+  }
+
+  async getAllChannels(): Promise<Channel[]> {
+    return await db.select().from(channels).orderBy(channels.name);
+  }
+
+  async createChannel(channel: InsertChannel): Promise<Channel> {
+    const [newChannel] = await db
+      .insert(channels)
+      .values(channel)
+      .returning();
+    return newChannel;
+  }
+
+  async updateChannel(id: string, data: Partial<InsertChannel>): Promise<Channel | undefined> {
+    const [channel] = await db
+      .update(channels)
+      .set(data)
+      .where(eq(channels.id, id))
+      .returning();
+    return channel || undefined;
+  }
+
+  async deleteChannel(id: string): Promise<boolean> {
+    const result = await db.delete(channels).where(eq(channels.id, id));
     return result.rowCount ? result.rowCount > 0 : false;
   }
 

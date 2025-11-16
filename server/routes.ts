@@ -15,6 +15,7 @@ import createMemoryStore from "memorystore";
 import multer from "multer";
 import path from "path";
 import fs from "fs";
+import { initializeTestUser, initializeWebChannel } from "./utils/users";
 
 const MemoryStore = createMemoryStore(session);
 
@@ -59,22 +60,6 @@ interface AuthenticatedRequest extends Request {
   user?: User;
 }
 
-async function initializeTestUser() {
-  const testUsername = "teste";
-  const existingUser = await storage.getUserByUsername(testUsername);
-  
-  if (!existingUser) {
-    const hashedPassword = await bcrypt.hash("senha123", 10);
-    await storage.createUser({
-      username: testUsername,
-      password: hashedPassword,
-      name: "Usuário Teste",
-      role: "attendant",
-      avatarUrl: null,
-    });
-    console.log("✅ Usuário teste criado: username='teste', password='senha123', role='attendant'");
-  }
-}
 
 async function authenticateMiddleware(
   req: AuthenticatedRequest,
@@ -133,6 +118,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   await initializeTestUser();
+  await initializeWebChannel();
 
   app.post("/api/auth/login", async (req: Request, res: Response) => {
     try {
@@ -322,6 +308,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Delete client error:", error);
       return res.status(500).json({ error: "Erro ao deletar contato" });
+    }
+  });
+
+  app.get("/api/channels", authenticateMiddleware, async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      const channels = await storage.getAllChannels();
+      return res.json(channels);
+    } catch (error) {
+      console.error("Get channels error:", error);
+      return res.status(500).json({ error: "Erro ao buscar canais" });
+    }
+  });
+
+  app.post("/api/channels", authenticateMiddleware, requireAttendant, async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      const channelData = req.body;
+      const channel = await storage.createChannel(channelData);
+      return res.json(channel);
+    } catch (error) {
+      console.error("Create channel error:", error);
+      return res.status(400).json({ error: "Erro ao criar canal" });
     }
   });
 

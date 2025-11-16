@@ -2,7 +2,64 @@
 
 ## Overview
 
-ChatWave is a modern messaging application built with a full-stack TypeScript architecture. The application features a Discord/Slack-inspired interface with a strong visual identity through gradient effects and glassmorphism design patterns. It's designed as a utility-focused messaging platform that supports Portuguese language users with proper UTF-8 character support.
+ChatWave is a modern multi-channel messaging application built with a full-stack TypeScript architecture. The application features role-based access control (attendants and clients), multi-channel support (Web, WhatsApp, Telegram), conversation management with unique alphanumeric protocols, and avatar upload capabilities. It's designed as a utility-focused messaging platform that supports Portuguese language users with proper UTF-8 character support.
+
+The application follows a monorepo structure with shared code between client and server, using Vite for frontend bundling and Express for the backend API.
+
+## Recent Changes (Nov 16, 2025)
+
+### Major Features Added
+1. **Role-Based Access Control**: Users can be either attendants or clients
+   - Attendants: Full CRUD access to users, conversations, channels
+   - Clients: Can view their own conversations only
+
+2. **Multi-Channel System**: Support for multiple communication channels
+   - Default "web" channel created automatically
+   - Channel types: web, whatsapp, telegram
+   - Channels page for viewing all channels
+
+3. **Conversation Management**: 
+   - Unique 10-character alphanumeric protocol generation for each conversation
+   - Conversations linked to specific channels
+   - Real-time messaging with avatar support
+   - Three-column layout: conversations list, chat area, conversation details
+
+4. **User Management Pages**:
+   - Attendants management (CRUD with avatar upload)
+   - Clients/Contacts management (CRUD with avatar upload)
+   - "Iniciar Conversa" button in contacts page to start new conversation
+
+5. **Avatar Upload System**: 
+   - Multer-based file upload to local filesystem
+   - Image validation (JPEG, PNG, GIF, max 5MB)
+   - Preview and remove functionality
+
+### UI/UX Changes
+1. **Header Redesign**:
+   - Increased height from h-16 to h-20
+   - Vertical gradient: blue-950 → purple-950 → blue-950
+   - WhatsApp-style logo (white circle with green chat icon)
+   - Full-width header at top, sidebar below
+
+2. **Layout Reorganization**:
+   - Header: 100% width at top
+   - Sidebar: Below header with role-based menu items
+   - Dynamic routes based on user role
+
+### Backend Architecture
+1. **Modular Route Organization**:
+   - Separated utility functions (utils/protocol.ts, utils/users.ts)
+   - All routes in single routes.ts (ready for future extraction)
+   - Channel initialization on startup
+
+2. **Database Schema**:
+   - channels table (id, name, description, type, isActive)
+   - conversations.channelId added as foreign key
+   - users.role and users.avatarUrl added
+
+3. **Authorization Middleware**:
+   - requireAttendant middleware for admin-only endpoints
+   - Role-based query filtering for conversations
 
 The application follows a monorepo structure with shared code between client and server, using Vite for frontend bundling and Express for the backend API.
 

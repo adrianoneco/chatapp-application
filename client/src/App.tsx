@@ -13,6 +13,7 @@ import NotFound from "@/pages/not-found";
 import AttendantsPage from "@/pages/attendants";
 import ClientsPage from "@/pages/clients";
 import ConversationsPage from "@/pages/conversations";
+import ChannelsPage from "@/pages/channels";
 import type { User } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 
@@ -46,7 +47,8 @@ function AuthenticatedLayout({ user }: { user: User }) {
               <Route path="/" component={HomePage} />
               <Route path="/attendants" component={AttendantsPage} />
               <Route path="/clients" component={ClientsPage} />
-              <Route path="/conversations" component={ConversationsPage} />
+              <Route path="/channels" component={ChannelsPage} />
+              <Route path="/conversations/:channelId?/:conversationId?" component={ConversationsPage} />
               <Route path="/settings" component={() => <div className="p-8">Configurações em breve...</div>} />
               <Route component={NotFound} />
             </Switch>

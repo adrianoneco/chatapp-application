@@ -30,9 +30,11 @@ import type { User, Conversation, Message } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { useParams, useSearch } from "wouter";
 
 const conversationSchema = z.object({
   title: z.string().min(1, "Título é obrigatório").optional(),
+  channelId: z.string().min(1, "Selecione um canal"),
   clientId: z.string().min(1, "Selecione um cliente"),
   attendantId: z.string().min(1, "Selecione um atendente"),
 });
@@ -41,6 +43,8 @@ type ConversationForm = z.infer<typeof conversationSchema>;
 
 export default function ConversationsPage() {
   const { toast } = useToast();
+  const params = useParams();
+  const searchParams = new URLSearchParams(useSearch());
   const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
   const [isNewConversationOpen, setIsNewConversationOpen] = useState(false);
   const [messageContent, setMessageContent] = useState("");
@@ -48,6 +52,10 @@ export default function ConversationsPage() {
 
   const { data: currentUser } = useQuery<User>({
     queryKey: ["/api/auth/me"],
+  });
+
+  const { data: channels = [] } = useQuery<any[]>({
+    queryKey: ["/api/channels"],
   });
 
   const { data: conversations = [] } = useQuery<Conversation[]>({
@@ -86,14 +94,30 @@ export default function ConversationsPage() {
     resolver: zodResolver(conversationSchema),
     defaultValues: {
       title: "",
-      clientId: "",
+      channelId: channels.find(c => c.type === "web")?.id || "",
+      clientId: searchParams.get("clientId") || "",
       attendantId: currentUser?.id || "",
     },
   });
 
-  const createConversationMutation = useMutation({
+  useEffect(() => {
+    if (channels.length > 0 && !form.getValues("channelId")) {
+      const webChannel = channels.find(c => c.type === "web");
+      if (webChannel) {
+        form.setValue("channelId", webChannel.id);
+      }
+    }
+    
+    const clientIdFromUrl = searchParams.get("clientId");
+    if (clientIdFromUrl && !form.getValues("clientId")) {
+      form.setValue("clientId", clientIdFromUrl);
+      setIsNewConversationOpen(true);
+    }
+  }, [channels, form, searchParams]);
+
+  const createConversationMutation = useMutation<Conversation, Error, ConversationForm>({
     mutationFn: async (data: ConversationForm) => {
-      return await apiRequest("POST", "/api/conversations", data);
+      return await apiRequest("POST", "/api/conversations", data) as Promise<Conversation>;
     },
     onSuccess: (newConversation: Conversation) => {
       queryClient.invalidateQueries({ queryKey: ["/api/conversations"] });
@@ -445,6 +469,28 @@ export default function ConversationsPage() {
               </Select>
               {form.formState.errors.clientId && (
                 <p className="text-sm text-destructive">{form.formState.errors.clientId.message}</p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="channelId">Canal</Label>
+              <Select
+                value={form.watch("channelId")}
+                onValueChange={(value) => form.setValue("channelId", value)}
+              >
+                <SelectTrigger data-testid="select-channel">
+                  <SelectValue placeholder="Selecione um canal" />
+                </SelectTrigger>
+                <SelectContent>
+                  {channels.map((channel: any) => (
+                    <SelectItem key={channel.id} value={channel.id}>
+                      {channel.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {form.formState.errors.channelId && (
+                <p className="text-sm text-destructive">{form.formState.errors.channelId.message}</p>
               )}
             </div>
 

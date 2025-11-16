@@ -13,10 +13,20 @@ export const users = pgTable("users", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+export const channels = pgTable("channels", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: text("name").notNull().unique(),
+  description: text("description"),
+  type: text("type", { enum: ["web", "whatsapp", "telegram"] }).notNull().default("web"),
+  isActive: text("is_active").notNull().default("true"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
 export const conversations = pgTable("conversations", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   protocol: varchar("protocol", { length: 10 }).notNull().unique(),
   title: text("title"),
+  channelId: varchar("channel_id").notNull().references(() => channels.id),
   attendantId: varchar("attendant_id").references(() => users.id),
   clientId: varchar("client_id").references(() => users.id),
   status: text("status", { enum: ["open", "closed", "waiting"] }).notNull().default("open"),
@@ -39,6 +49,11 @@ export const insertUserSchema = createInsertSchema(users).omit({
 
 export const updateUserSchema = insertUserSchema.partial().omit({ username: true, password: true });
 
+export const insertChannelSchema = createInsertSchema(channels).omit({
+  id: true,
+  createdAt: true,
+});
+
 export const insertConversationSchema = createInsertSchema(conversations).omit({
   id: true,
   protocol: true,
@@ -60,6 +75,9 @@ export type InsertUser = z.infer<typeof insertUserSchema>;
 export type UpdateUser = z.infer<typeof updateUserSchema>;
 export type User = typeof users.$inferSelect;
 export type LoginCredentials = z.infer<typeof loginSchema>;
+
+export type Channel = typeof channels.$inferSelect;
+export type InsertChannel = z.infer<typeof insertChannelSchema>;
 
 export type Conversation = typeof conversations.$inferSelect;
 export type InsertConversation = z.infer<typeof insertConversationSchema>;
