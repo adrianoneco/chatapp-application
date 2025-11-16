@@ -38,7 +38,13 @@ export const messages = pgTable("messages", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   conversationId: varchar("conversation_id").notNull().references(() => conversations.id, { onDelete: "cascade" }),
   senderId: varchar("sender_id").notNull().references(() => users.id),
-  content: text("content").notNull(),
+  messageType: text("message_type", { enum: ["text", "audio", "video", "image", "file"] }).notNull().default("text"),
+  content: text("content"),
+  fileUrl: text("file_url"),
+  metadata: text("metadata"),
+  replyToId: varchar("reply_to_id").references((): any => messages.id),
+  forwardedFromId: varchar("forwarded_from_id").references((): any => messages.id),
+  isDeleted: text("is_deleted").notNull().default("false"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
