@@ -250,10 +250,10 @@ export default function ConversationsPage() {
                           </Badge>
                         </div>
                         <p className="text-xs text-muted-foreground mt-1">
-                          {formatDistanceToNow(new Date(conversation.updatedAt), {
+                          {conversation.updatedAt ? formatDistanceToNow(new Date(conversation.updatedAt), {
                             addSuffix: true,
                             locale: ptBR,
-                          })}
+                          }) : "Agora"}
                         </p>
                       </div>
                     </div>
@@ -321,10 +321,10 @@ export default function ConversationsPage() {
                             <p className="text-sm">{message.content}</p>
                           </div>
                           <p className="text-xs text-muted-foreground mt-1">
-                            {formatDistanceToNow(new Date(message.createdAt), {
+                            {message.createdAt ? formatDistanceToNow(new Date(message.createdAt), {
                               addSuffix: true,
-                              locale: ptBR,
-                            })}
+                            locale: ptBR,
+                            }) : "Agora"}
                           </p>
                         </div>
                       </div>
@@ -420,10 +420,10 @@ export default function ConversationsPage() {
             <div>
               <Label className="text-xs text-muted-foreground">Criada em</Label>
               <p className="text-sm">
-                {formatDistanceToNow(new Date(selectedConversation.createdAt), {
+                {selectedConversation.createdAt ? formatDistanceToNow(new Date(selectedConversation.createdAt), {
                   addSuffix: true,
                   locale: ptBR,
-                })}
+                }) : "Agora"}
               </p>
             </div>
           </div>
