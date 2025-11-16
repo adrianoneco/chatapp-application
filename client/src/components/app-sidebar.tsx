@@ -60,7 +60,7 @@ export function AppSidebar() {
                       }`}
                       data-testid={`link-${item.title.toLowerCase()}`}
                     >
-                      <Link href={item.url}>
+                      <Link href={item.url} aria-current={isActive ? "page" : undefined}>
                         <item.icon className="w-8 h-8" />
                         <span className="text-base">{item.title}</span>
                       </Link>

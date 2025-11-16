@@ -1,4 +1,4 @@
-import { Switch, Route, Redirect } from "wouter";
+import { Switch, Route, useLocation } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider, useQuery } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
@@ -14,9 +14,17 @@ import type { User } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 
 function AuthenticatedLayout({ user }: { user: User }) {
+  const [, setLocation] = useLocation();
+  
   const handleLogout = async () => {
-    await apiRequest("POST", "/api/auth/logout", {});
-    queryClient.invalidateQueries({ queryKey: ["/api/auth/me"] });
+    try {
+      await apiRequest("POST", "/api/auth/logout", {});
+      queryClient.setQueryData(["/api/auth/me"], null);
+      queryClient.invalidateQueries({ queryKey: ["/api/auth/me"] });
+      setLocation("/");
+    } catch (error) {
+      console.error("Logout error:", error);
+    }
   };
 
   const style = {

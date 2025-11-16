@@ -13,7 +13,7 @@ import type { User } from "@shared/schema";
 
 interface AppHeaderProps {
   user: User | null;
-  onLogout: () => void;
+  onLogout: () => Promise<void>;
 }
 
 export function AppHeader({ user, onLogout }: AppHeaderProps) {
